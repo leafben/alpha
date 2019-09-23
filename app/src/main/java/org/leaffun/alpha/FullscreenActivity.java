@@ -1,12 +1,15 @@
 package org.leaffun.alpha;
 
 import android.annotation.SuppressLint;
+import android.graphics.Color;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.MotionEvent;
 import android.view.View;
+
+import org.leaffun.view.slide.SlideView;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -86,8 +89,10 @@ public class FullscreenActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_fullscreen);
+        SlideView slideView = findViewById(R.id.slide);
+        slideView.addMenu("test1", R.color.colorAccent,R.color.colorPrimary,null);
+        slideView.addMenu("test2", R.color.colorPrimaryDark,R.color.colorAccent,null);
 
         mVisible = true;
         mControlsView = findViewById(R.id.fullscreen_content_controls);
