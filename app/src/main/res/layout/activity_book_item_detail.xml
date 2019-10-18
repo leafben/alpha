@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".BookItemDetailActivity">
+
+    <!-- The primary full-screen view. This can be replaced with whatever view
+         is needed to present your content, e.g. VideoView, SurfaceView,
+         TextureView, etc. -->
+
+        <EditText
+            android:id="@+id/edit"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_above="@id/save"
+            android:gravity="start|top"
+            android:backgroundTint="@color/colorPrimary"
+            android:foregroundTint="@color/colorPrimary"
+            android:drawableTint="@color/colorPrimary"
+            />
+
+
+        <Button
+            android:id="@+id/save"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:gravity="center"
+            android:background="#999999"
+            android:keepScreenOn="true"
+            android:padding="15dp"
+            android:layout_margin="15dp"
+            android:text="保存记录详情"
+            android:textColor="#ffffff"
+            android:textSize="30sp"
+            android:textStyle="normal" />
+
+
+
+</RelativeLayout>

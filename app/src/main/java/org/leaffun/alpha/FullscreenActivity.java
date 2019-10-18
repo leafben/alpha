@@ -136,6 +136,7 @@ public class FullscreenActivity extends AppCompatActivity {
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.hide();
+            actionBar.setTitle("记事本");
         }
         mControlsView.setVisibility(View.GONE);
         mVisible = false;

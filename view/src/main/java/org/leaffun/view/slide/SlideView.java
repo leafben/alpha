@@ -26,166 +26,46 @@ import java.util.List;
  * 底层为侧滑按钮列表,LinearLayout
  * 第二层为原itemView
  */
+
 public class SlideView extends FrameLayout
 {
-    private String TAG = "SlideView";
-
+    private float absX;
+    private boolean clickDown;
+    private boolean mCanOpenMoreInOneContainer = false;
+    private float mFirstX;
+    private float mFirstY;
+    private float mHistoryX = 0.0F;
+    private float mHistoryY = 0.0F;
     private View mItemView;
+    private boolean mItemViewDown;
+    private List<SlideView> mOutterOpenMenuPlaceHolder = new ArrayList();
+    private boolean mResponseWhenMenuOpen = true;
+    private boolean mSlideMode = false;
     private LinearLayout menuLay;
-    /**
-     * 容器
-     */
-    private List<SlideView> mOuterMenuContainer = new ArrayList<>();
-    /**
-     * 同一个容器内多开
-     */
-    private boolean mMultiOpen = false;
-    /**
-     * down在可触发滑动的区域
-     */
-    private boolean mDownEventInSlideRange;
-    /**
-     * 是否处于测滑状态
-     */
-    private boolean mInSliding = false;
-    /**
-     * 侧滑触发距离
-     */
-    private float mSlidingDis = 50f;
+    private boolean right;
+    private int spaceX = 0;
 
     public SlideView(@NonNull Context paramContext)
     {
         super(paramContext);
         init();
     }
-    
+
     public SlideView(@NonNull Context paramContext, @Nullable AttributeSet paramAttributeSet)
     {
         super(paramContext, paramAttributeSet);
         init();
     }
-    
+
     public SlideView(@NonNull Context paramContext, @Nullable AttributeSet paramAttributeSet, int paramInt)
     {
         super(paramContext, paramAttributeSet, paramInt);
         init();
     }
 
-    private float mFirstX;
-    private float mFirstY;
-    private float mHistoryX = 0.0F;
-    private float mHistoryY = 0.0F;
-    private boolean moveToRightX;
-    @Override
-    public boolean onInterceptTouchEvent(MotionEvent paramMotionEvent)
-    {
-        if(menuLay.getChildCount()<=0) {
-            return super.onInterceptTouchEvent(paramMotionEvent);
-        }
-
-        //侧滑时：上级视图不要拦截事件
-        getParent().requestDisallowInterceptTouchEvent(this.mInSliding);
-
-        switch (paramMotionEvent.getAction()) {
-            case MotionEvent.ACTION_DOWN:
-                this.mHistoryX = paramMotionEvent.getX();
-                this.mHistoryY = paramMotionEvent.getY();
-                this.mFirstX = paramMotionEvent.getX();
-                this.mFirstY = paramMotionEvent.getY();
-
-                if (this.mItemView == null) {
-                    this.mItemView = getChildAt(1);
-                }
-                this.mDownEventInSlideRange = isTouchPointInView(this.mItemView, (int) paramMotionEvent.getRawX(), (int) paramMotionEvent.getRawY());
-                Log.e(TAG,"Down判断：是否在滑动区域"+mDownEventInSlideRange);
-                return super.onInterceptTouchEvent(paramMotionEvent);
-            case MotionEvent.ACTION_MOVE:
-                if (!this.mDownEventInSlideRange) {
-                    Log.e(TAG,"Move判断：Down不在滑动区域");
-                    return super.onInterceptTouchEvent(paramMotionEvent);
-                }else{
-                    Log.e(TAG,"Move判断：Down在滑动区域");
-                }
-
-                float nowX = paramMotionEvent.getX();
-                float nowY = paramMotionEvent.getY();
-                float absY = Math.abs(nowY - this.mHistoryY);
-                float firstMoveX = Math.abs(nowX - this.mFirstX);
-                float absX = Math.abs(nowX - this.mHistoryX);
-
-                if (!mInSliding && (firstMoveX < mSlidingDis) && (Math.abs(nowY - this.mFirstY) < mSlidingDis)) {
-                    Log.e(TAG,"Move判断：处于点击区域");
-                    return super.onInterceptTouchEvent(paramMotionEvent);
-                }
-
-                if (!mInSliding && !((absY < absX) && firstMoveX > mSlidingDis)) {
-                    Log.e(TAG,"Move判断：未满足是横向滑动且大于触发距离");
-                    return super.onInterceptTouchEvent(paramMotionEvent);
-                }
-
-                float disX;
-                this.moveToRightX = nowX > this.mHistoryX;
-                if (this.moveToRightX) {
-                    disX = this.mItemView.getX() + absX;
-                } else {
-                    disX = this.mItemView.getX() - absX;
-                    if ((!this.mMultiOpen) && (this.mOuterMenuContainer != null)) {
-                        closeOtherMenus();
-                    }
-                }
-                if(!mInSliding){
-                    disX += 50;
-                }
-                if (disX > 0.0F) {
-                    disX = 0.0F;
-                }
-                float menuWidth = getMenuWidth();
-                Log.e(TAG,"Move判断：menuWidth "+menuWidth);
-                if (disX < -menuWidth) {
-                    disX = -menuWidth;
-                }
-                Log.e(TAG,"Move判断：计算滑开的距离X "+disX);
-                this.mItemView.setX(disX);
-//                ViewGroup.LayoutParams params = menuLay.getLayoutParams();
-//                params.width = (int) Math.abs(disX);
-//                menuLay.setLayoutParams(params);
-                Log.e(TAG,"Move判断：menuWidth "+menuWidth);
-                this.mInSliding = true;
-                this.mHistoryX = nowX;
-                this.mHistoryY = nowY;
-
-                return super.onInterceptTouchEvent(paramMotionEvent);
-            case MotionEvent.ACTION_CANCEL:
-                Log.e(TAG,"ACTION_CANCEL事件");
-            case MotionEvent.ACTION_UP:
-                Log.e(TAG,"ACTION_UP事件");
-                if (!mInSliding){
-                    Log.e(TAG,"未滑动");
-                    return super.onInterceptTouchEvent(paramMotionEvent);
-                }
-
-                if (this.moveToRightX) {
-                    Log.e(TAG,"自动关闭");
-                    closeView();
-                } else {
-                    Log.e(TAG,"自动打开");
-                    openView();
-                }
-
-                return true;
-            default:
-                Log.e(TAG,"其他事件");
-                return super.onInterceptTouchEvent(paramMotionEvent);
-        }
-
-
-    }
-    float width = 0f;
     private float getMenuWidth()
     {
-        if(width!=0){
-            return width;
-        }
+        float width = 0f;
         if (this.menuLay != null)
         {
             if (this.menuLay.getChildCount() > 0)
@@ -196,20 +76,21 @@ public class SlideView extends FrameLayout
                     width += this.menuLay.getChildAt(i).getMeasuredWidth();
                     i += 1;
                 }
+                width += this.spaceX * (this.menuLay.getChildCount() - 1);
             }
         }
         return width;
     }
-    
+
     private void init()
     {
         this.menuLay = new LinearLayout(getContext());
-        LayoutParams localLayoutParams = new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+        FrameLayout.LayoutParams localLayoutParams = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
         localLayoutParams.gravity = Gravity.END;
         this.menuLay.setLayoutParams(localLayoutParams);
         this.menuLay.setGravity(Gravity.END);
         this.menuLay.setBackgroundColor(Color.WHITE);
-        this.menuLay.setOnClickListener(new OnClickListener()
+        this.menuLay.setOnClickListener(new View.OnClickListener()
         {
             public void onClick(View paramAnonymousView) {
 
@@ -236,19 +117,19 @@ public class SlideView extends FrameLayout
             return;
         }
 
-        if (this.mOuterMenuContainer != null)
+        if (this.mOutterOpenMenuPlaceHolder != null)
         {
             Object localObject = ObjectAnimator.ofFloat(this.mItemView, "translationX", this.mItemView.getX(), -getMenuWidth());
             ((ObjectAnimator)localObject).setDuration(100L);
             ((ObjectAnimator)localObject).start();
-            this.mInSliding = true;
+            this.mSlideMode = true;
 
-            if (this.mMultiOpen) {
-                if (!this.mOuterMenuContainer.contains(this)) {
-                    this.mOuterMenuContainer.add(this);
+            if (this.mCanOpenMoreInOneContainer) {
+                if (!this.mOutterOpenMenuPlaceHolder.contains(this)) {
+                    this.mOutterOpenMenuPlaceHolder.add(this);
                 }
             }else{
-                localObject = this.mOuterMenuContainer.iterator();
+                localObject = this.mOutterOpenMenuPlaceHolder.iterator();
                 while (((Iterator)localObject).hasNext())
                 {
                     SlideView localSlideView2 = (SlideView)((Iterator)localObject).next();
@@ -256,25 +137,25 @@ public class SlideView extends FrameLayout
                         localSlideView2.closeView();
                     }
                 }
-                this.mOuterMenuContainer.clear();
-                this.mOuterMenuContainer.add(this);
+                this.mOutterOpenMenuPlaceHolder.clear();
+                this.mOutterOpenMenuPlaceHolder.add(this);
             }
 
         }
     }
 
-    public void addMenu(String paramString, int backgroundColor, int textColor, final OnClickListener paramOnClickListener)
+    public void addMenu(String paramString, int backgroundColor, int textColor, final View.OnClickListener paramOnClickListener)
     {
         final TextView localTextView = new TextView(getContext());
-        LayoutParams localLayoutParams = new LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT);
-        localTextView.setPadding(dp2px(15), 0, dp2px(15), 0);
+        FrameLayout.LayoutParams localLayoutParams = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT);
+        localTextView.setPadding(dp2px(17), 0, dp2px(17), 0);
         localTextView.setGravity(Gravity.CENTER);
         localTextView.setLayoutParams(localLayoutParams);
         localTextView.setText(paramString);
         localTextView.setTextSize(14);
         localTextView.setBackgroundColor(getResources().getColor(backgroundColor));
         localTextView.setTextColor(getResources().getColor(textColor));
-        localTextView.setOnClickListener(new OnClickListener()
+        localTextView.setOnClickListener(new View.OnClickListener()
         {
             public void onClick(View paramAnonymousView)
             {
@@ -291,19 +172,19 @@ public class SlideView extends FrameLayout
         this.menuLay.addView(localTextView);
     }
 
-    public void addMenuView(final View paramView, @NonNull final OnClickListener paramOnClickListener)
+    public void addMenuView(final View paramView, @NonNull final View.OnClickListener paramOnClickListener)
     {
         ViewGroup.LayoutParams localLayoutParams = paramView.getLayoutParams();
         localLayoutParams.width = ViewGroup.LayoutParams.WRAP_CONTENT;
         localLayoutParams.height = ViewGroup.LayoutParams.MATCH_PARENT;
         paramView.setLayoutParams(localLayoutParams);
-        paramView.setOnClickListener(new OnClickListener()
+        paramView.setOnClickListener(new View.OnClickListener()
         {
             public void onClick(View paramAnonymousView)
             {
                 if (SlideView.this.mItemView.getX() != 0.0F)
                 {
-                    
+
                     SlideView.this.closeView();
                     if (paramOnClickListener != null) {
                         paramOnClickListener.onClick(paramView);
@@ -313,27 +194,27 @@ public class SlideView extends FrameLayout
         });
         this.menuLay.addView(paramView);
     }
-    
+
     public void closeAllMenu()
     {
-        if (this.mOuterMenuContainer == null) {
+        if (this.mOutterOpenMenuPlaceHolder == null) {
             return;
         }
-        Iterator localIterator = this.mOuterMenuContainer.iterator();
+        Iterator localIterator = this.mOutterOpenMenuPlaceHolder.iterator();
         while (localIterator.hasNext())
         {
             SlideView localSlideView2 = (SlideView)localIterator.next();
             localSlideView2.closeView();
         }
-        this.mOuterMenuContainer.clear();
+        this.mOutterOpenMenuPlaceHolder.clear();
     }
-    
+
     public void closeOtherMenus()
     {
-        if (this.mOuterMenuContainer == null) {
+        if (this.mOutterOpenMenuPlaceHolder == null) {
             return;
         }
-        Iterator localIterator = this.mOuterMenuContainer.iterator();
+        Iterator localIterator = this.mOutterOpenMenuPlaceHolder.iterator();
         while (localIterator.hasNext())
         {
             SlideView localSlideView2 = (SlideView)localIterator.next();
@@ -341,57 +222,164 @@ public class SlideView extends FrameLayout
                 localSlideView2.closeView();
             }
         }
-        this.mOuterMenuContainer.clear();
-        this.mOuterMenuContainer.add(this);
+        this.mOutterOpenMenuPlaceHolder.clear();
+        this.mOutterOpenMenuPlaceHolder.add(this);
     }
-    
+
     public void closeView()
     {
         if ((this.mItemView == null) || (this.mItemView.getX() == 0.0F)) {
-            mInSliding = false;
+            mSlideMode = false;
             return;
         }
-       
+
         ObjectAnimator localObjectAnimator = ObjectAnimator.ofFloat(this.mItemView, "translationX", this.mItemView.getX(), 0.0F);
         localObjectAnimator.setDuration(100L);
         localObjectAnimator.start();
         localObjectAnimator.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
-                mInSliding = false;
+                mSlideMode = false;
             }
         });
 
-        
-        if (mOuterMenuContainer != null && mOuterMenuContainer.contains(this)){
-            this.mOuterMenuContainer.remove(this);
+
+        if (mOutterOpenMenuPlaceHolder != null && mOutterOpenMenuPlaceHolder.contains(this)){
+            this.mOutterOpenMenuPlaceHolder.remove(this);
         }
     }
 
-
-    public void setMultiOpen(boolean paramBoolean)
+    public boolean onInterceptTouchEvent(MotionEvent paramMotionEvent)
     {
-        this.mMultiOpen = paramBoolean;
+        if(menuLay.getChildCount()>0) {
+            getParent().requestDisallowInterceptTouchEvent(this.mSlideMode);
+            switch (paramMotionEvent.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+
+                    this.mHistoryX = paramMotionEvent.getX();
+                    this.mHistoryY = paramMotionEvent.getY();
+                    this.mFirstX = paramMotionEvent.getX();
+                    this.mFirstY = paramMotionEvent.getY();
+                    this.clickDown = true;
+                    if (this.mItemView == null) {
+                        this.mItemView = getChildAt(1);
+                    }
+                    this.mItemViewDown = isTouchPointInView(this.mItemView, (int) paramMotionEvent.getRawX(), (int) paramMotionEvent.getRawY());
+                    break;
+                case MotionEvent.ACTION_MOVE:
+
+                    if (!this.mItemViewDown) {
+
+                        return super.onInterceptTouchEvent(paramMotionEvent);
+                    }
+
+                    float nowX = paramMotionEvent.getX();
+                    float nowY = paramMotionEvent.getY();
+                    float absY = Math.abs(nowY - this.mHistoryY);
+                    this.absX = Math.abs(nowX - this.mHistoryX);
+                    float firstMoveX = Math.abs(nowX - this.mFirstX);
+                    if ((firstMoveX > 10.0F) || (Math.abs(nowY - this.mFirstY) > 10.0F)) {
+                        this.clickDown = false;//移动接管
+                    }
+
+                    this.right = nowX > this.mHistoryX;
+                    this.mHistoryX = nowX;
+                    this.mHistoryY = nowY;
+
+                    if (this.mSlideMode || ((absY < this.absX) && firstMoveX > 50)) {
+                        float disX;
+                        if (this.right) {
+
+                            disX = this.mItemView.getX() + absX;
+                        } else {
+
+                            disX = this.mItemView.getX() - absX;
+
+                            if ((!this.mCanOpenMoreInOneContainer) && (this.mOutterOpenMenuPlaceHolder != null)) {
+                                closeOtherMenus();
+                            }
+                        }
+
+                        if (disX > 0.0F) {
+                            disX = 0.0F;
+                        }
+                        if (disX < -getMenuWidth()) {
+                            disX = -getMenuWidth();
+                        }
+                        this.mItemView.setX(disX);
+                        this.mSlideMode = true;
+                    } else {
+//                        if(absY>absX){
+//                            closeAllMenu();
+//                        }
+                    }
+                    break;
+                case MotionEvent.ACTION_CANCEL:
+
+                case MotionEvent.ACTION_UP:
+
+                    if ((this.mItemViewDown) && this.mSlideMode) {
+                        if (this.right) {
+                            if (this.mItemView.getX() != 0.0F) {
+
+                                closeView();
+                            } else {
+
+                                closeView();
+                            }
+                        } else {
+
+                            openView();
+                        }
+
+                        if (this.mSlideMode || !this.clickDown) {
+                            //滑动时，区域过大时禁止点击
+                            return true;
+                        }
+
+
+                        if (!this.mResponseWhenMenuOpen) {
+                            return true;
+                        }
+                    } else {
+
+                    }
+                    break;
+                default:
+
+                    break;
+            }
+        }
+        return super.onInterceptTouchEvent(paramMotionEvent);
     }
-    
+
+    public void setCanOpenMoreInOneContainer(boolean paramBoolean)
+    {
+        this.mCanOpenMoreInOneContainer = paramBoolean;
+    }
+
     public void setMenuLayBackgroundColor(int paramInt)
     {
         if (this.menuLay != null) {
             this.menuLay.setBackgroundColor(getResources().getColor(paramInt));
         }
     }
-    
-    public void setOuterMenuContainer(List<SlideView> paramList)
+
+    public void setOutterOpenMenuContainer(List<SlideView> paramList)
     {
-        this.mOuterMenuContainer = paramList;
+        this.mOutterOpenMenuPlaceHolder = paramList;
     }
-    
+
+    public void setResponseClickWhenMenuIsClosing(boolean paramBoolean)
+    {
+        this.mResponseWhenMenuOpen = paramBoolean;
+    }
+
     public void clearMenu()
     {
         if (this.menuLay != null && this.menuLay.getChildCount() > 0)
         {
             menuLay.removeAllViews();
-            mOuterMenuContainer = null;
         }
     }
 

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".BookEditActivity">
+
+    <!-- The primary full-screen view. This can be replaced with whatever view
+         is needed to present your content, e.g. VideoView, SurfaceView,
+         TextureView, etc. -->
+
+        <EditText
+            android:id="@+id/edit"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="200dp"
+            android:maxHeight="300dp"
+            android:gravity="start|top"
+            android:textCursorDrawable="@color/colorPrimary"
+            android:backgroundTint="@color/colorPrimary"
+            android:foregroundTint="@color/colorPrimary"
+            android:drawableTint="@color/colorPrimary"
+            />
+
+
+        <Button
+            android:id="@+id/add_category"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:background="#999999"
+            android:keepScreenOn="true"
+            android:padding="15dp"
+            android:layout_margin="15dp"
+            android:text="添加类别"
+            android:textColor="#ffffff"
+            android:textSize="30sp"
+            android:textStyle="normal" />
+
+        <Button
+            android:id="@+id/add_item"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:background="#999999"
+            android:keepScreenOn="true"
+            android:padding="15dp"
+            android:layout_margin="15dp"
+            android:text="添加记录"
+            android:textColor="#ffffff"
+            android:textSize="30sp"
+            android:textStyle="normal" />
+
+
+</LinearLayout>
